@@ -27,9 +27,10 @@ class Name(Field):
 class Birthday(Field):
     def __init__(self, value: str):
         try:
-            self.value = datetime.strptime(value, "%d.%m.%Y")
-        except ValueError:
-            raise DateValidationError("Invalid date (try using DD.MM.YYYY format)")
+            self.datetime_value = datetime.strptime(value, "%d.%m.%Y")
+            super().__init__(value)
+        except ValueError as exc:
+            raise DateValidationError("Invalid date (try using DD.MM.YYYY format)") from exc
         
 class Phone(Field):
     def __init__(self, value: str):
@@ -75,7 +76,7 @@ class Record:
         self.birthday = Birthday(birthday)
         
     def __str__(self):
-        return f"Contact name: {self.name.value}; phone(s): {', '.join(p.value for p in self.phones)}{f"; birthday: {AddressBook.date_to_string(self.birthday.value)}" if self.birthday else ""}"
+        return f"Contact name: {self.name.value}; phone(s): {', '.join(p.value for p in self.phones)}{f"; birthday: {self.birthday}" if self.birthday else ""}"
 
 class AddressBook(UserDict):
 
@@ -117,7 +118,7 @@ class AddressBook(UserDict):
         today = datetime.today()
         for name in self.data:
             if self.data[name].birthday:
-                birthday = self.data[name].birthday.value
+                birthday = self.data[name].birthday.datetime_value
                 birthday_this_year = birthday.replace(year=today.year)
                 if birthday_this_year.toordinal() < today.toordinal():
                     birthday_this_year = birthday.replace(year=today.year+1)
@@ -256,9 +257,9 @@ def show_birthday(args: list[str], book: AddressBook) -> str:
     name = args[0]
     if book.find(name):
         if book[name].birthday:
-            return f"{Fore.GREEN}\n{name}: {AddressBook.date_to_string(book[name].birthday.value)}"
+            return f"{Fore.GREEN}\n{name}: {book[name].birthday}"
         return Fore.GREEN + f"\nThere is no birthday for {name} yet"
-    return Fore.GREEN + f"\nThe contact \"{name}\" doesn't exist"
+    return Fore.GREEN + f"\nContact \"{name}\" doesn't exist"
 
 # Function to show congratulation dates
 @input_error

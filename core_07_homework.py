@@ -27,8 +27,8 @@ class Name(Field):
 class Birthday(Field):
     def __init__(self, value: str):
         try:
-            self.datetime_value = datetime.strptime(value, "%d.%m.%Y")
-            super().__init__(value)
+            if datetime.strptime(value, "%d.%m.%Y"):
+                super().__init__(value)
         except ValueError as exc:
             raise DateValidationError("Invalid date (try using DD.MM.YYYY format)") from exc
         
@@ -118,7 +118,7 @@ class AddressBook(UserDict):
         today = datetime.today()
         for name in self.data:
             if self.data[name].birthday:
-                birthday = self.data[name].birthday.datetime_value
+                birthday = datetime.strptime(self.data[name].birthday.value, "%d.%m.%Y")
                 birthday_this_year = birthday.replace(year=today.year)
                 if birthday_this_year.toordinal() < today.toordinal():
                     birthday_this_year = birthday.replace(year=today.year+1)
